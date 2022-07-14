@@ -1,0 +1,543 @@
+---
+title: "Untitled"
+author: "rss"
+date: '2022-07-13'
+output: html_document
+---
+
+TRABAJO FINAL: ANÁLISIS DE FACTORES ASOCIADOS A LA CONTAMINACIÓN E INDUSTRIALIZACIÓN DE LOS PAÍSES A NIVEL GLOBAL DURANTE EL AÑO 2016
+
+#INTRODUCCIÓN y OBJETIVOS
+
+Durante lás ultimas decadas, la productividad industrial de las naciones a nivel mundial se ha repuntado gracias a los nuevos paradigmas de planificación e innovación tecnologica, en paralelo a la construcción de tejidos internacionales de cooperación que han permitido un crecimiento sostenible de movilidad en los mercados transnacionales. Lamentablemente, este sistema de industrialización feroz tiene consecuencias que no son tomadas en cuentas y tienen afectación directa al medioambiente y las personas inmersas en este. 
+Las industrias incluyen procesos de transformación de materias primas para la construccion de productos manufacturados, los cuales no consideran la variable necesaria de sostenibilidad para que la produccion no atente contra la preservación de los ecosistemas naturales y civiles que se encuentran en un area geografica de influencia. Es, en los mencionados procesos, donde se generan excedentes residuales de diversa indole, donde podemos tomar como ejemplo a las particulas PM2.5, gases de efecto invernadero, gases fluorados, entre otros, los cuales depende del tipo de industria de la cual hagamos mencion.
+
+La aceleración en la produccion industrial global ha traido multiples beneficios de progreso economico y desarrollo social a las sociedades, ha sido motor impulsor de economias en multiples casos y a permitido reducir problemas estructurales como la pobreza y el desempleo, pero, conforme se encrudece su necesidad, aparecen nuevos retos y problematicas como los es la contaminación y la sostenibilidad ambiental, cuya soluciones son necesarias y de caracter urgente. 
+
+Frente a ello, en el presente trabajo tratara de evidenciar el caracter relacional de estos factores para encontrar explicaciones argumentadas con medicion para determinar si existen causalidades entre variables, de igual manera que se buscara poner en evidencia las realidades nacionales, logrando asi la identificación de datos particulares que permitan la construcción de predicciones que bordean las tematicas de sostenibilidad y sistemas de producción.
+
+Antes de realizar el analisis, es necesario identificar y comprender las variables a estudiar:
+
+°Dependiente:
+
+  (CDA) CONTAMINACIÓN DEL AIRE POR PM2,5
+  
+La variable indica la exposición ponderada de la población a la contaminación ambiental PM2.5, la cual se define como el nivel promedio de exposición de la población de una nación a concentraciones de partículas suspendidas que miden menos de 2.5 micrones de diámetro aerodinámico, que son capaces de penetrar profundamente en el tracto respiratorio y causar problemas de salud graves. La exposición se calculó ponderando las concentraciones anuales medias de PM2.5 por población tanto en áreas urbanas como rurales. 
+        
+    
+°Independientes:
+
+  (GEI) EMISIONES DE GASES DE EFECTO INVERNADERO TOTALES
+    
+La variable mide las emisiones totales de gases de efecto invernadero en kt de CO2, lo cuál equivale a la composición total de CO2 excluyendo la quema de biomasa de ciclo corto (como la quema de    desechos agrícolas y la quema de sabanas) pero incluyendo otra quema de biomasa (como incendios forestales, descomposición posterior a la quema, incendios de turba y de turberas drenadas), todas las fuentes antropogénicas de CH4, fuentes de N2O y gases fluorados (HFC,  PFC y SF6).
+   
+    
+        
+  (IVA) INDUSTRIALIZACIÓN, VALOR AGREGADO
+  
+La variable mide la tasa de crecimiento anual del valor agregado industrial en moneda local, a precios constantes. Sus agregados están expresados en dólares de los Estados Unidos a precios constantes del año 2010. El término “industria” corresponde a las divisiones 10 a 45 de la  CIIU e incluye a las industrias manufactureras (divisiones 15 a 37 de la CIIU). Comprende el valor agregado en explotación de minas y canteras, industrias manufactureras (que también se informa como un subgrupo distinto), construcción, y suministro de electricidad,  gas y agua. El valor agregado es la producción neta de un sector después de sumar todos los productos y restar los insumos intermedios. Se calculó sin hacer deducciones por depreciación de bienes manufacturados o por agotamiento y degradación de recursos naturales.
+
+
+#METODOLOGÍA
+
+El presente estudio busca conocer el grado de afectación y relación de las variables independientes (Emisiones de gases de efecto invernadero totales // Industrialización, valor agregado) a la Contaminación del aire por PM2.5, variable que sera instrumentalizada como dependiente. Para lograr esta asociación entre los factores mencionados, se hara uso de pruebas estadisticas como el analisis de regresión y conglomerados, que junto a los graficos pertinentes permitan interpretar a la variables y sus respectivas relaciones a nivel descriptivo.
+A partir de lo mencionado, se realizara el uso de una Data de temporalidad especifica fabricada a partir de la metadata del Banco Mundial que brinda un muestreo numerico de valores corresponidentes a los países. Se buscara respetar la naturaleza de cada variable, pero priorizando tecnicas de relacionalidad que permitan analizarlas bajo ejercicios de regresión individual respecto a cada variable independiente con la dependiente para luego uniformizar los datos generados en un mismo registro que permitan hallar explicaciones y predicciones.
+
+
+#PROCEDIMIENTO
+
+```{r}
+library(rio)
+data=import("Data_World_Bank_2016_.xlsx")
+```
+
+```{r}
+install.packages("cluster")
+install.packages("fpc")
+install.packages("psych")
+install.packages("nortest")
+install.packages("ggplot2")
+install.packages("DescTools")
+install.packages("readr")
+install.packages("BBmisc")
+install.packages("factoextra")
+install.packages("dbscan")
+install.packages("ggcorrplot")
+install.packages("polycor")
+install.packages("stargazer")
+install.packages("lmtest")
+install.packages("zoo")
+```
+
+
+- Regresión 1: Analisis de la afectación de la emision de gases de efecto invernadero a la COntamiación del aire por PM2.5
+
+```{r}
+class(data$GEI)
+class(data$CDA)
+
+data$GEI=as.numeric(data$GEI)
+data$CDA=as.numeric(data$CDA)
+
+class(data$GEI)
+class(data$CDA)
+
+sum(is.na(data$GEI))
+sum(is.na(data$CDA))
+
+data1 = data[complete.cases(data$GEI),]
+data1 = data[complete.cases(data$CDA),]
+
+plot(data1$CDA,data1$GEI)
+```
+
+```{r}
+library(nortest)
+lillie.test(data1$GEI)
+```
+
+```{r}
+lillie.test(data1$CDA)
+```
+
+Ambos p-values son menores a 0.05 por lo cual se procede a continuar las pruebas de correlación con Spearman.
+
+
+HIPOTESIS:
+
+H0 = No existe correlación entre la Contaminación del Aire por PM2,5 y las emisiones de gases de efecto invernadero totales
+H1 = Sí existe correlación entre la Contaminación del Aire por PM2,5 y las emisiones de gases de efecto invernadero totales
+
+```{r}
+cor.test(data1$CDA, data1$GEI, method = c("spearman"))
+```
+
+Hecho el cor.test, nos arroja un valor de 0.01015 para el p-value, siendo ello menor a 0.05 
+
+
+Las hipótesis para la prueba F son las siguientes:
+
+H0: El modelo de regresión no es válido
+
+H1: El modelo de regresión es válido
+
+
+```{r}
+modelo1 <- lm(CDA~GEI, data=data)
+anova(modelo1)
+```
+```{r}
+summary(modelo1)
+```
+
+
+Siendo el valor del p-value 0.2263, se acepta que el modelo de regresión es valido
+
+El modelo brinda una explicación del 0.002%
+
+```{r}
+library(ggplot2)
+ggplot(data1, aes(x=CDA, y=GEI)) +
+  geom_point(colour="brown") +  xlab("Contaminación del aire por PM2.5") +  ylab("Emisiones de gases de efecto invernadero") +
+  ggtitle("Modelo 1") +
+  theme_light()+ geom_smooth(method="lm", se = F)
+```
+
+
+#Regresión 2: Analisis de la afectación de la Industrialización-valor agregado a la COntamiación del aire por PM2.5
+
+```{r}
+class(data$CDA)
+class(data$IVA)
+
+data$CDA=as.numeric(data$CDA)
+data$IVA=as.numeric(data$IVA)
+
+class(data$CDA)
+class(data$IVA)
+
+sum(is.na(data$CDA))
+sum(is.na(data$IVA))
+
+data2 = data[complete.cases(data$CDA),]
+data2 = data[complete.cases(data$IVA),]
+
+plot(data2$CDA,data2$IVA)
+```
+
+```{r}
+library(nortest)
+lillie.test(data2$CDA)
+```
+
+```{r}
+lillie.test(data2$IVA)
+```
+
+Ambos valores p-values son menores a 0.05, dado ello se procede a realizar pruebas de correlación con Spearman. 
+
+
+HIPOTESIS:
+H0 = No existe correlación entre la industrialización, valor agregado y la contaminación del aire por PM2,5 
+H1 = Sí existe correlación entre la industrialización, valor agregado y la contaminación del aire por PM2,5 
+
+```{r}
+cor.test(data2$CDA, data2$IVA, method = c("spearman"))
+```
+
+En este caso, el p-value es mayor a 0.05 por lo que se aprueba la hipotesis nula y se asume que no hay mayor relación entre variables
+
+
+
+Las hipótesis para la prueba F son las siguientes:
+
+H0: El modelo de regresión no es válido
+
+H1: El modelo de regresión es válido
+
+
+```{r}
+modelo2 <- lm(CDA~IVA, data=data)
+anova(modelo2)
+summary(modelo2)
+```
+
+Dado que el p-value es mayor a 0.05, se aprueba la hipotesis nula, siendo asi el modelo invalido y se concluye que no existe mayor relacion entre CDA y IVA.
+
+La explicación en este modelo es del 0.0025%
+
+ECUACIÓN: Y= 88.4270+0.3432*X
+
+
+```{r}
+library(ggplot2)
+ggplot(data2, aes(x=CDA, y=GEI)) +
+  geom_point(colour="brown") +  xlab("Contaminación del aire por PM2.5") +  ylab("Industrialización, valor agregado") +
+  ggtitle("Modelo 2") +
+  theme_light()+ geom_smooth(method="lm", se = F)
+```
+
+#REGRESIÓN LINEAL MULTIVARIADA DE LAS VARIABLES
+
+```{r}
+library(stargazer)
+```
+
+```{r}
+modelo3=formula(data$CDA~data$GEI+data$IVA)
+regresión1=lm(modelo3,data=data)
+stargazer(regresión1,type = "text")
+```
+
+```{r}
+summary(regresión1)
+```
+
+El modelo presentado tiene por p-value 0.009939 y explica un 0.042%, una mejora considerable a comparación de las regresiones presentadas. Por lo expuesto tambien se decanta que es la Industrialización-valor agregado la variable con posibilidad de explicar, dado que su p-value fue menor a 0.05.
+
+#DIAGNOSTICOS DE REGRESIÓN
+
+- Linealidad:
+
+```{r}
+plot(regresión1, 1)
+```
+
+- Homocedasticidad:
+
+```{r}
+plot(regresión1, 3)
+```
+
+```{r}
+library(lmtest)
+```
+
+```{r}
+bptest(regresión1)
+```
+
+La probabilidad de homocedasticidad es muy alta porque el p-value tiene un valor mayor a 0.05, se aprueba que el modelo tenga homocedasticidad.
+
+- Normalidad de residuos:
+
+```{r}
+plot(regresión1, 2)
+```
+
+```{r}
+shapiro.test(regresión1$residuals)
+```
+
+```{r}
+library(DescTools)
+VIF(regresión1)
+```
+
+Como ninguna variable sale mayor a 5, ninguna es candidata a ser retirada y muestra que estas no están muy correlacionadas entre sí, es decir, muestra que estas no tratan de explicar el mismo fenómeno
+
+- Valores influyentes:
+
+```{r}
+plot(regresión1, 5)
+```
+
+El gráfico muestra que efectivamente hay valores atípicos que influyen negativamente en la regresión
+
+
+#ANÁLISIS DE CONGLOMERADOS - preparación de variables propias+ otra del grupo para el cluster
+
+```{r}
+list(names(data))
+```
+
+```{r}
+data3 = data[,c(1,8,12,13)]
+```
+
+```{r}
+library(readr)
+str(data3)
+```
+
+```{r}
+summary(data3)
+```
+
+```{r}
+data3$UET=as.numeric(data3$UET)
+```
+
+```{r}
+class(data3$UET)
+```
+```{r}
+sum(is.na(data3$UET))
+```
+
+```{r}
+boxplot(data3[,-1])
+```
+
+```{r}
+library(BBmisc)
+```
+
+```{r}
+boxplot(normalize(data3[,-1],method='range',range=c(0,1)))
+```
+
+```{r}
+data3[,-1]=normalize(data3[,-1],method='standardize')
+data3=data3[complete.cases(data3),]
+
+summary(data3)
+```
+
+- Correlaciones:
+
+```{r}
+cor(data3[,-1])
+```
+
+Cambio de monotonía:
+
+```{r}
+data3$IVA=-1*data3$IVA
+
+cor(data3[,-1])
+```
+
+Preparamos la data para la clusterización:
+
+```{r}
+dataClus=data3[,-1]
+row.names(dataClus)=data3$`Country Name`
+```
+
+
+#CLAUSTERIZACIÓN:
+
+```{r}
+library(cluster)
+g.dist = daisy(dataClus, metric="gower")
+```
+
+Pondremos cuatro clusters:
+
+```{r}
+set.seed(123)
+pam.resultado=pam(g.dist,4,cluster.only = F)
+
+dataClus$pam=pam.resultado$cluster
+```
+
+Exploración de resultados:
+
+```{r}
+aggregate(.~ pam, data=dataClus,mean)
+```
+
+Recodificamos las etiquetas del cluster:
+
+```{r}
+original=aggregate(.~ pam, data=dataClus,mean)
+original[order(original$IVA),]
+```
+
+Se va a recodificar los clusters en función del IVA (Industrialización, valor agregado), se tomo está decisión porque es la variable dependiente y la que más nos interesa analizar
+
+```{r}
+dataClus$pam=dplyr::recode(dataClus$pam, `3` = 1, `2`=2,`4`=3,`1`=4)
+```
+
+ESTRATEGIA JERARQUICA:
+
+Estrategia jerarquica aglomerativa:
+
+```{r}
+set.seed(123)
+library(factoextra)
+```
+
+```{r}
+res.agnes<- hcut(g.dist, k = 4,hc_func='agnes',hc_method = "ward.D")
+
+dataClus$agnes=res.agnes$cluster
+```
+
+```{r}
+aggregate(.~ agnes, data=dataClus,mean)
+```
+
+Recodificamos el cluster para que este ordenado:
+
+```{r}
+original=aggregate(.~ agnes, data=dataClus,mean)
+original[order(original$IVA),]
+```
+
+```{r}
+dataClus$agnes=dplyr::recode(dataClus$agnes, `4` = 1, `1`=2,`3`=3,`2`=4)
+```
+
+Visualización:
+
+```{r}
+fviz_dend(res.agnes, cex = 0.7, horiz = T)
+```
+
+Estrategia jerárquica divisiva:
+
+```{r}
+proyeccion = cmdscale(g.dist, k=2,add = T)
+dataClus$dim1 <- proyeccion$points[,1]
+dataClus$dim2 <- proyeccion$points[,2]
+```
+
+```{r}
+base= ggplot(dataClus,aes(x=dim1, y=dim2,label=row.names(dataClus))) 
+base + geom_text(size=2)
+```
+
+```{r}
+base= ggplot(dataClus,aes(x=dim1, y=dim2)) +  coord_fixed()
+base + geom_point(size=2, aes(color=as.factor(pam)))  + labs(title = "PAM") 
+```
+
+```{r}
+base= ggplot(dataClus,aes(x=dim1, y=dim2)) +  coord_fixed()
+base + geom_point(size=2, aes(color=as.factor(agnes))) + labs(title = "AGNES")
+```
+
+```{r}
+base + geom_point(size=2, aes(color=as.factor(agnes))) + labs(title = "DIANA")
+```
+
+```{r}
+g.dist.cmd = daisy(dataClus[,c('dim1','dim2')], metric = 'euclidean')
+```
+
+```{r}
+library(dbscan)
+kNNdistplot(g.dist, k=3)
+```
+
+```{r}
+library(fpc)
+```
+
+```{r}
+db.cmd = fpc::dbscan(g.dist, eps=0.065, MinPts=3,method = 'dist')
+```
+
+```{r}
+db.cmd
+```
+
+```{r}
+data3$db=as.factor(db.cmd$cluster)
+```
+
+```{r}
+data3$db=as.factor(db.cmd$cluster)
+```
+
+#Proceso del Analisis Factorial Exploratorio (EFA)
+
+1.Matriz de correlación:
+
+```{r}
+dontselect=c("Country")
+select=setdiff(names(dataClus),dontselect) 
+Data=dataClus[,select]
+```
+
+```{r}
+library(polycor)
+corMatrix=polycor::hetcor(Data)$correlations
+```
+
+2, Explorar correlaciones:
+
+```{r}
+install.packages("ggcorrplot")
+library(ggcorrplot)
+ggcorrplot(corMatrix)
+```
+
+```{r}
+library(psych)
+```
+
+```{r}
+psych::KMO(corMatrix) 
+```
+
+```{r}
+cortest.bartlett(corMatrix,n=nrow(Data))$p.value>0.05
+```
+
+
+#CONCLUSIONES
+
+-Obtenidos los resultados de las pruebas estadisticas, es posible identificar que no hay mayor relacionalidad entre la variable dependiente (contaminación del aire por PM2.5) y las variables independientes (Industrialización-valor agregado // Emisiones de gases de efecto invernadero),
+-
+-
+-
+
+
+
+
+# Link del repositorio en GitHub:
+
+# Link a publicacion final en RPubs:
+
+
+
+g. ANEXOS
+* Regresion y diagnosticos
+* Todo clustering
+* Todo Factorial
+
+
